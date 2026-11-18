@@ -8,8 +8,9 @@ Python standard library only; this file is independent of sqlite_setup.py.
     python export_database.py --db /path/company.db --output /path/company.json --overwrite
     python export_database.py --self-test
 
-DEFAULTS: reads work.db next to this script; writes <database-name>.json.
-Edit the constants below or supply command-line arguments.
+DEFAULTS: reads work.db next to this script; writes work_export.json next to it.
+Set DEFAULT_DATABASE and DEFAULT_OUTPUT below to choose the file names and
+locations. Command-line --db and --output override those settings independently.
 
 JSON STRUCTURE
     format_version, exported_at_utc, database, schema, tables
@@ -55,8 +56,16 @@ import sqlite3
 import tempfile
 
 
-# CONFIGURATION
+# CONFIGURATION: EDIT THE TWO FILE PATHS HERE.
+# Each path sets both the directory and file name. The defaults use this script's
+# folder; replace with an absolute path for another location, for example:
+# DEFAULT_DATABASE = Path("/Users/your_name/Documents/company.db")
+# DEFAULT_OUTPUT = Path("/Users/your_name/Documents/exports/company.json")
+# Windows example: Path(r"C:\Data\exports\company.json")
 DEFAULT_DATABASE = Path(__file__).resolve().with_name("work.db")
+DEFAULT_OUTPUT = Path(__file__).resolve().with_name("work_export.json")
+
+# Other settings
 DEFAULT_TIMEOUT_SECONDS = 30
 JSON_INDENT = 2
 MAX_EXACT_JSON_INTEGER = 2**53 - 1
@@ -234,7 +243,8 @@ def self_test():
 def main():
     parser = argparse.ArgumentParser(description="Export SQLite schema and data to JSON.")
     parser.add_argument("--db", type=Path, default=DEFAULT_DATABASE, help="Source SQLite database")
-    parser.add_argument("--output", type=Path, help="Destination JSON; default: database name with .json")
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT,
+                        help="Destination JSON; default: DEFAULT_OUTPUT configured above")
     parser.add_argument("--overwrite", action="store_true", help="Replace an existing JSON export")
     parser.add_argument("--self-test", action="store_true", help="Run checks with a temporary database")
     args = parser.parse_args()
